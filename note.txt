@@ -1,0 +1,224 @@
+Berikut adalah **contoh lengkap server `Socket.IO`** dengan **fitur `event` listener dan `emit`**:
+
+---
+
+## ✅ File: `server.js` (Node.js)
+
+```js
+const { Server } = require("socket.io");
+const http = require("http");
+
+// Setup server HTTP
+const server = http.createServer();
+const io = new Server(server, {
+    cors: {
+        origin: "*", // biarkan semua origin (atau sesuaikan jika perlu)
+        methods: ["GET", "POST"]
+    }
+});
+
+// Saat client terhubung
+io.on('connection', (socket) => {
+    console.log('Client connected:', socket.id);
+
+    // Kirim event ke client setelah terhubung
+    socket.emit('server:welcome', { message: 'Selamat datang dari server Socket.IO!', id: socket.id });
+
+    // Dengarkan event dari client
+    socket.on('client:ping', (data) => {
+        console.log('Client kirim ping:', data);
+
+        // Balas ke client
+        socket.emit('server:pong', {
+            message: 'Pong dari server',
+            received: data,
+            time: new Date()
+        });
+    });
+
+    // Broadcast ke semua client (termasuk pengirim)
+    socket.on('device:update', (data) => {
+        console.log('Broadcast device update:', data);
+        io.emit('device:update', data); // broadcast ke semua
+    });
+
+    // Jika client disconnect
+    socket.on('disconnect', () => {
+        console.log('Client disconnected:', socket.id);
+    });
+});
+
+// Jalankan server di port 3000
+server.listen(3000, () => {
+    console.log('Socket.IO server berjalan di http://localhost:3000');
+});
+```
+
+---
+
+## 📦 Cara Menjalankan:
+
+1. Buat folder baru dan masuk ke dalamnya
+2. Jalankan:
+
+```bash
+npm init -y
+npm install socket.io
+```
+
+3. Buat file `server.js` dan isi dengan kode di atas
+4. Jalankan server:
+
+```bash
+node server.js
+```
+
+---
+
+## 🔄 Tes Event dari Client (Laravel)
+
+Contoh kirim `client:ping` dari Laravel (client Socket.IO):
+
+```js
+socket.emit('client:ping', { user: 'admin', waktu: new Date() });
+```
+
+Server akan membalas event `server:pong`.
+
+---
+
+## 🎯 Event Daftar (Server ⇄ Client)
+
+| Arah            | Nama Event       | Keterangan                    |
+| --------------- | ---------------- | ----------------------------- |
+| Server → Client | `server:welcome` | Saat pertama terhubung        |
+| Client → Server | `client:ping`    | Client kirim ping ke server   |
+| Server → Client | `server:pong`    | Server balas `client:ping`    |
+| Client ⇄ Server | `device:update`  | Untuk broadcast status device |
+
+---
+ {
+    contact: '-',
+    endpoint: '1081',
+    status: 'Unavailable 0 of',
+    timestamp: '2025-07-16 08:17:05'
+  },
+  {
+    contact: '-',
+    endpoint: '1082',
+    status: 'Unavailable 0 of',
+    timestamp: '2025-07-16 08:17:05'
+  },
+  {
+    contact: '-',
+    endpoint: '1083',
+    status: 'Unavailable 0 of',
+    timestamp: '2025-07-16 08:17:05'
+  },
+  {
+    contact: '-',
+    endpoint: '1084',
+    status: 'Unavailable 0 of',
+    timestamp: '2025-07-16 08:17:05'
+  },
+  {
+    contact: '-',
+    endpoint: '1085',
+    status: 'Unavailable 0 of',
+    timestamp: '2025-07-16 08:17:05'
+  },
+  {
+    contact: '-',
+    endpoint: '1086',
+    status: 'Unavailable 0 of',
+    timestamp: '2025-07-16 08:17:05'
+  },
+  {
+    contact: '-',
+    endpoint: '1087',
+    status: 'Unavailable 0 of',
+    timestamp: '2025-07-16 08:17:05'
+  },
+  {
+    contact: '-',
+    endpoint: '1088',
+    status: 'Unavailable 0 of',
+    timestamp: '2025-07-16 08:17:05'
+  },
+  {
+    contact: '-',
+    endpoint: '1089',
+    status: 'Unavailable 0 of',
+    timestamp: '2025-07-16 08:17:05'
+  },
+  {
+    contact: '-',
+    endpoint: '1090',
+    status: 'Unavailable 0 of',
+    timestamp: '2025-07-16 08:17:05'
+  },
+  {
+    contact: '-',
+    endpoint: '1091',
+    status: 'Unavailable 0 of',
+    timestamp: '2025-07-16 08:17:05'
+  },
+  {
+    contact: '-',
+    endpoint: '1092',
+    status: 'Unavailable 0 of',
+    timestamp: '2025-07-16 08:17:05'
+  },
+  {
+    contact: '-',
+    endpoint: '1093',
+    status: 'Unavailable 0 of',
+    timestamp: '2025-07-16 08:17:05'
+  },
+  {
+    contact: '-',
+    endpoint: '1094',
+    status: 'Unavailable 0 of',
+    timestamp: '2025-07-16 08:17:05'
+  },
+  {
+    contact: '-',
+    endpoint: '1095',
+    status: 'Unavailable 0 of',
+    timestamp: '2025-07-16 08:17:05'
+  },
+  {
+    contact: '-',
+    endpoint: '1096',
+    status: 'Unavailable 0 of',
+    timestamp: '2025-07-16 08:17:05'
+  },
+  {
+    contact: '-',
+    endpoint: '1097',
+    status: 'Unavailable 0 of',
+    timestamp: '2025-07-16 08:17:05'
+  },
+  {
+    contact: '-',
+    endpoint: '1098',
+    status: 'Unavailable 0 of',
+    timestamp: '2025-07-16 08:17:05'
+  },
+  {
+    contact: '192.168.196.182',
+    endpoint: '1099',
+    status: 'Not in use',
+    timestamp: '2025-07-16 08:17:05'
+  },
+  {
+    contact: '192.168.196.182',
+    endpoint: '1001',
+    status: 'Not in use',
+    timestamp: '2025-07-16 08:17:15'
+  },
+  ... 7523 more items
+]
+Client terputus: FCTCRVvIo-_zsWiWAAAD
+Data dikirim ke client: null
+Data dikirim ke client: null
