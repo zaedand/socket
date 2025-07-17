@@ -1,64 +1,56 @@
 const express = require('express');
 const http = require('http');
+const cors = require('cors');
 const { Server } = require('socket.io');
-const axios = require('axios');
-
-
-axios.get('http://192.168.196.235:3077/logs/endpoint', {
-    auth: {
-        username: 'admin',
-        password: 'admin123' // <- ganti dengan yang sesuai
-    }
-})
-.then(res => console.log(res.data))
-.catch(err => console.error('Error:', err.response.status, err.message));
 
 const app = express();
+app.use(cors());
 const server = http.createServer(app);
+
 const io = new Server(server, {
-    cors: { origin: '*' } // agar bisa diakses dari frontend Laravel
+  cors: {
+    origin: '*', // bisa disesuaikan ke http://localhost:8000 jika perlu
+    methods: ['GET', 'POST']
+  }
+});
+fetch('http://localhost:8000/api/nodes/1/status', {
+  method: 'PUT',
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json' // <--- ini penting
+  },
+  body: JSON.stringify({ status: 'online' })
 });
 
-const PORT = 3000; // ganti port jika perlu
+// Simulasi update status secara periodik
+const devices = [
+  { id: 1, status: 'online' },
+  { id: 2, status: 'offline' },
+  { id: 3, status: 'partial' }
+];
 
-// Tes route biasa (bisa diakses via browser)
-app.get('/', (req, res) => {
-    res.send('Node.js + Express + Socket.IO server aktif!');
-});
+// Emit status update setiap 10 detik
+setInterval(() => {
+  // Ubah status acak untuk simulasi
+  devices.forEach(device => {
+    const statuses = ['online', 'offline', 'partial'];
+    device.status = statuses[Math.floor(Math.random() * statuses.length)];
+  });
 
-// WebSocket client connect
-io.on('connection', (socket) => {
-    console.log('Client terhubung:', socket.id);
-
-    socket.on('disconnect', () => {
-        console.log('Client terputus:', socket.id);
-    });
-});
-
-// Polling ke API eksternal (192.168.196.235)
-const apiURL = 'http://192.168.196.235:3077/logs/endpoint';
-
-setInterval(async () => {
-    try {
-        const res = await axios.get(apiURL, {
-            auth: {
-                username: 'admin',
-                password: 'admin123'
-            }
-        });
-
-        console.log('RESPON MENTAH:', res.data);
-        
-        const data = res.data;
-        io.emit('device-status', data);
-        console.log('Data dikirim ke client:', data);
-
-    } catch (error) {
-        console.error('Gagal ambil data:', error.response?.status, error.message);
-    }
+  io.emit('device:status-update', devices); // broadcast ke semua client
+  console.log('Update dikirim:', devices);
 }, 10000);
 
-// Start server
-server.listen(PORT, () => {
-    console.log(`Server berjalan di http://localhost:${PORT}`);
+io.on('connection', socket => {
+  console.log('Client connected:', socket.id);
+
+  socket.emit('server:welcome', { message: 'Terhubung ke server realtime', id: socket.id });
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
+});
+
+server.listen(3000, () => {
+  console.log('Socket.IO server berjalan di http://localhost:3000');
 });
