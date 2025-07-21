@@ -1,64 +1,65 @@
 const express = require('express');
 const http = require('http');
-const cors = require('cors');
 const { Server } = require('socket.io');
+const axios = require('axios');
+
+
+axios.get('http://192.168.196.235:3077/logs/endpoint', {
+    auth: {
+        username: 'admin',
+        password: 'admin123' // <- ganti dengan yang sesuai
+    }
+})
+.then(res => console.log(res.data))
+.catch(err => console.error('Error:', err.response.status, err.message));
 
 const app = express();
 app.use(cors());
-app.use(express.json());
-
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: '*', // ganti dengan 'http://localhost:8000' jika ingin membatasi
-    methods: ['GET', 'POST', 'PUT']
+    origin: '*', // bisa disesuaikan ke http://localhost:8000 jika perlu
+    methods: ['GET', 'POST']
   }
 });
-
-// Dummy devices
-let devices = [
-  { id: 1, name: 'PBX Kantor', endpoint: '/api/nodes/1', status: 'online' },
-  { id: 2, name: 'Gateway Gedung A', endpoint: '/api/nodes/2', status: 'offline' },
-  { id: 3, name: 'Server IPBX', endpoint: '/api/nodes/3', status: 'partial' },
-];
-
-// Fungsi random status
-function randomStatus() {
-  const options = ['online', 'offline', 'partial'];
-  return options[Math.floor(Math.random() * options.length)];
-}
-
-// Emit update status ke semua client setiap 10 detik
-setInterval(() => {
-  devices = devices.map(device => ({
-    ...device,
-    status: randomStatus(),
-    timestamp: new Date().toISOString()
-  }));
-
-  console.log('[Emit] Update status:', devices);
-  io.emit('device:status-update', devices); // broadcast ke semua client
-}, 10000);
-
-// Untuk debugging
-app.get('/devices', (req, res) => {
-  res.json(devices);
+fetch('http://localhost:8000/api/nodes/1/status', {
+  method: 'PUT',
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json' // <--- ini penting
+  },
+  body: JSON.stringify({ status: 'online' })
 });
 
-// Socket.IO event
-io.on('connection', socket => {
-  console.log('[Socket.IO] Client connected:', socket.id);
+// Simulasi update status secara periodik
+const devices = [
+  { id: 1, status: 'online' },
+  { id: 2, status: 'offline' },
+  { id: 3, status: 'partial' }
+];
 
-  // Kirim data awal saat koneksi
-  socket.emit('device:status-update', devices);
+// Emit status update setiap 10 detik
+setInterval(() => {
+  // Ubah status acak untuk simulasi
+  devices.forEach(device => {
+    const statuses = ['online', 'offline', 'partial'];
+    device.status = statuses[Math.floor(Math.random() * statuses.length)];
+  });
+
+  io.emit('device:status-update', devices); // broadcast ke semua client
+  console.log('Update dikirim:', devices);
+}, 10000);
+
+io.on('connection', socket => {
+  console.log('Client connected:', socket.id);
+
+  socket.emit('server:welcome', { message: 'Terhubung ke server realtime', id: socket.id });
 
   socket.on('disconnect', () => {
-    console.log('[Socket.IO] Client disconnected:', socket.id);
+    console.log('Client disconnected:', socket.id);
   });
 });
 
-// Jalankan server
-const PORT = 3000;
-server.listen(PORT, () => {
-  console.log(`✅ Socket.IO server berjalan di http://localhost:${PORT}`);
+server.listen(3000, () => {
+  console.log('Socket.IO server berjalan di http://localhost:3000');
 });
